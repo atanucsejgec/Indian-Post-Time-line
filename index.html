@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>India Post Timeline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #f5a623;
+            text-shadow: 0 0 20px rgba(245, 166, 35, 0.5);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #a0a0c0;
+            font-size: 1rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-filter {
+            background: rgba(255,255,255,0.08);
+            color: #ccc;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .btn-filter:hover, .btn-filter.active {
+            background: #f5a623;
+            color: #1a1a2e;
+            border-color: #f5a623;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(245, 166, 35, 0.4);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.6);
+        }
+
+        .search-box {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .search-box input {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.08);
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box input::placeholder {
+            color: #888;
+        }
+
+        .search-box input:focus {
+            border-color: #f5a623;
+            box-shadow: 0 0 15px rgba(245, 166, 35, 0.2);
+        }
+
+        .timeline-container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #f5a623, #e74c3c, #9b59b6, #3498db);
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .decade-label {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            margin: 25px 0 10px;
+        }
+
+        .decade-label span {
+            background: linear-gradient(135deg, #f5a623, #e67e22);
+            color: #1a1a2e;
+            padding: 5px 20px;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .timeline-item {
+            display: flex;
+            justify-content: flex-end;
+            padding-right: calc(50% + 30px);
+            margin-bottom: 20px;
+            position: relative;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .timeline-item:nth-child(even) {
+            justify-content: flex-start;
+            padding-right: 0;
+            padding-left: calc(50% + 30px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 50%;
+            top: 15px;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #f5a623;
+            border: 3px solid #1a1a2e;
+            z-index: 2;
+            transition: transform 0.3s;
+        }
+
+        .timeline-item:hover .timeline-dot {
+            transform: translateX(-50%) scale(1.4);
+        }
+
+        .card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 14px 18px;
+            max-width: 380px;
+            width: 100%;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(245, 166, 35, 0.4);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .card-category {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
+        .card-date {
+            font-size: 0.85rem;
+            color: #f5a623;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #ffffff;
+            line-height: 1.4;
+        }
+
+        .card-note {
+            font-size: 0.78rem;
+            color: #a0a0c0;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* Category colors */
+        .cat-savings .card::before { background: #27ae60; }
+        .cat-savings .card-category { color: #27ae60; }
+        .cat-savings .timeline-dot { background: #27ae60; }
+
+        .cat-postal .card::before { background: #3498db; }
+        .cat-postal .card-category { color: #3498db; }
+        .cat-postal .timeline-dot { background: #3498db; }
+
+        .cat-speed .card::before { background: #e74c3c; }
+        .cat-speed .card-category { color: #e74c3c; }
+        .cat-speed .timeline-dot { background: #e74c3c; }
+
+        .cat-digital .card::before { background: #9b59b6; }
+        .cat-digital .card-category { color: #9b59b6; }
+        .cat-digital .timeline-dot { background: #9b59b6; }
+
+        .cat-insurance .card::before { background: #1abc9c; }
+        .cat-insurance .card-category { color: #1abc9c; }
+        .cat-insurance .timeline-dot { background: #1abc9c; }
+
+        .cat-admin .card::before { background: #f5a623; }
+        .cat-admin .card-category { color: #f5a623; }
+        .cat-admin .timeline-dot { background: #f5a623; }
+
+        .cat-banking .card::before { background: #e91e8c; }
+        .cat-banking .card-category { color: #e91e8c; }
+        .cat-banking .timeline-dot { background: #e91e8c; }
+
+        .cat-discontinued .card::before { background: #95a5a6; }
+        .cat-discontinued .card-category { color: #95a5a6; }
+        .cat-discontinued .timeline-dot { background: #95a5a6; }
+
+        .cat-milestone .card::before { background: #f39c12; }
+        .cat-milestone .card-category { color: #f39c12; }
+        .cat-milestone .timeline-dot { background: #f39c12; }
+
+        /* Similarities Section */
+        .similarities-section {
+            max-width: 900px;
+            margin: 50px auto 30px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(245, 166, 35, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .similarities-section h2 {
+            color: #f5a623;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .similarity-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            border-left: 4px solid #f5a623;
+        }
+
+        .similarity-group h3 {
+            color: #f5a623;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .similarity-group ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .similarity-group ul li {
+            color: #b0b0c0;
+            font-size: 0.85rem;
+            padding: 3px 0;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .similarity-group ul li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #f5a623;
+        }
+
+        .count-bar {
+            text-align: center;
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        .count-bar span {
+            color: #f5a623;
+            font-weight: 700;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* PDF styles */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .controls, .search-box, .btn-download {
+                display: none !important;
+            }
+            .timeline-container::before {
+                background: #333 !important;
+            }
+            .card {
+                background: #f9f9f9 !important;
+                border: 1px solid #ddd !important;
+                color: black !important;
+            }
+            .card-title { color: #000 !important; }
+            .header h1 { color: #c0392b !important; text-shadow: none !important; }
+        }
+
+        @media (max-width: 650px) {
+            .timeline-container::before {
+                left: 18px;
+            }
+
+            .timeline-item,
+            .timeline-item:nth-child(even) {
+                justify-content: flex-start;
+                padding-left: 50px;
+                padding-right: 0;
+            }
+
+            .timeline-dot {
+                left: 18px;
+            }
+
+            .card {
+                max-width: 100%;
+            }
+
+            .header h1 {
+                font-size: 1.6rem;
+            }
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            color: #aaa;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .progress-container {
+            max-width: 900px;
+            margin: 0 auto 20px;
+        }
+
+        .quiz-btn {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);
+        }
+
+        .quiz-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(155, 89, 182, 0.6);
+        }
+
+        .quiz-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .quiz-overlay.active {
+            display: flex;
+        }
+
+        .quiz-box {
+            background: #1a1a2e;
+            border: 1px solid rgba(245, 166, 35, 0.4);
+            border-radius: 16px;
+            padding: 35px;
+            max-width: 550px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .quiz-box h2 {
+            color: #f5a623;
+            margin-bottom: 10px;
+        }
+
+        .quiz-question {
+            color: #e0e0e0;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .quiz-option {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.06);
+            color: #ccc;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .quiz-option:hover {
+            border-color: #f5a623;
+            color: #f5a623;
+        }
+
+        .quiz-option.correct {
+            background: rgba(39, 174, 96, 0.3);
+            border-color: #27ae60;
+            color: #27ae60;
+        }
+
+        .quiz-option.wrong {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+
+        .quiz-feedback {
+            font-size: 0.9rem;
+            min-height: 24px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .quiz-score {
+            color: #a0a0c0;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+
+        .quiz-nav {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📮 India Post — Timeline</h1>
+    <p>Chronological history of key milestones, services & schemes</p>
+</div>
+
+<div class="controls">
+    <button class="btn btn-filter active" data-filter="all">All</button>
+    <button class="btn btn-filter" data-filter="savings">Savings</button>
+    <button class="btn btn-filter" data-filter="postal">Postal</button>
+    <button class="btn btn-filter" data-filter="speed">Speed Post</button>
+    <button class="btn btn-filter" data-filter="digital">Digital</button>
+    <button class="btn btn-filter" data-filter="banking">Banking</button>
+    <button class="btn btn-filter" data-filter="insurance">Insurance</button>
+    <button class="btn btn-filter" data-filter="admin">Admin</button>
+    <button class="btn btn-filter" data-filter="discontinued">Discontinued</button>
+    <button class="btn btn-filter" data-filter="milestone">Milestone</button>
+    <button class="btn quiz-btn" onclick="startQuiz()">🧠 Quiz Me</button>
+    <button class="btn btn-download" onclick="downloadPDF()">⬇ Download PDF</button>
+</div>
+
+<div class="search-box">
+    <input type="text" id="searchInput" placeholder="🔍 Search events, dates, services..." oninput="filterSearch()">
+</div>
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div>Savings</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3498db"></div>Postal</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div>Speed Post</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#9b59b6"></div>Digital</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e91e8c"></div>Banking</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1abc9c"></div>Insurance</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f5a623"></div>Admin</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#95a5a6"></div>Discontinued</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div>Milestone</div>
+</div>
+
+<div class="count-bar">Showing <span id="visibleCount">0</span> of <span id="totalCount">0</span> events</div>
+
+<div class="timeline-container" id="timeline"></div>
+
+<div class="similarities-section" id="similarities">
+    <h2>🔗 Similarities & Connections Between Events</h2>
+
+    <div class="similarity-group">
+        <h3>📅 Independence Day Launches (15 August)</h3>
+        <ul>
+            <li>PIN Code System — 15 August 1972</li>
+            <li>Monthly Income Scheme — 15 August 1987</li>
+        </ul>
+    </div>
+
+    <div class="similarity-group">
+        <h3>🗓 April 1 Launches (New Financial Year)</h3>
+        <ul>
+            <li>POSB General Rules — 1 April 1982</li>
+            <li>Kisan Vikas Patra (KVP) — 1 April 1988</li>
+            <li>Mahila Samman Savings Certificate — 1 April 2023</li>
+        </ul>
+    </div>
+
+    <div class="similarity-group">
+        <h3>📮 August 1 Launches</h3>
+        <ul>
+            <li>Domestic Philatelic Deposit Account — 1 August 1965</li>
+            <li>Speed Post Service — 1 August 1986</li>
+        </ul>
+    </div>
+
+    <div class="similarity-group">
+        <h3>⚡ Speed Post Related Services</h3>
+        <ul>
+            <li>Speed Post launched — 1 August 1986</li>
+            <li>Speed Post Passport Service — 5 March 2001</li>
+            <li>Speed Post "One Rate" Service — 31 August 2006</li>
+        </ul>
+    </div>
+
+    <div class="similarity-group">
+        <h3>💰 Money Transfer & Payment Services</h3>
+        <ul>
+            <li>Electronic Fund Transfer — 2001</li>
+            <li>Instant Money Order (IMO) — 20 January 2006</li>
+            <li>e-Payment Service — 25 June 2006</li>
+            <li>Western Union Money Transfer discontinued — 31 January 2024</li>
+            <li>IMO discontinued — 14 July 2020</li>
+        </ul>
+    </div>
+
+    <div class="similarity-group">
+        <h3>💻 Digital / Technology Services</h3>
+        <ul>
+            <li>Meghdoot Software — 2002</li>
+            <li>Track & Trace Service — January 2002</li>
+            <li>e-Post — 30 January 2004</li>
+            <li>IT Modernization Project — November 2012</li>
+            <li>e-IPO — 22 March 2013</li>
+            <li>Internet Banking — 14 December 2018</li>
+            <li>Mobile Banking — 15 October 2019</li>
+            <li>e-Passbook Facility — 12 October 2022</li>
+        </ul>
+    </div>
+
+    <div class="similarity-group">
+        <h3>🏦 ATM & Banking Milestones</h3>
+        <ul>
+            <li>DoP ATM launched — 2014</li>
+            <li>BoP ATM Interoperability — 31 December 2016</li>
+            <li>IPPB launched — 1 September 2018</li>
+            <li>DoP ATM handed to IPPB — 10 August 2022</li>
+        </ul>
+    </div>
+
+    <div class="similarity-group">
+        <h3>💼 Savings Schemes Introduced</h3>
+        <ul>
+            <li>PPF — 1 July 1968</li>
+            <li>KVP — 1 April 1988</li>
+            <li>NSC (VIII Issue) — 8 May 1989</li>
+            <li>SCSS — 2004</li>
+            <li>Mahila Samman Savings Certificate — 1 April 2023</li>
+        </ul>
+    </div>
+
+    <div class="similarity-group">
+        <h3>🚫 Services Discontinued</h3>
+        <ul>
+            <li>Instant Money Order (IMO) — 14 July 2020</li>
+            <li>Mobile Savings Certificates — 31 March 2023</li>
+            <li>Western Union Money Transfer — 31 January 2024</li>
+        </ul>
+    </div>
+
+    <div class="similarity-group">
+        <h3>📜 Legislative/Administrative Changes</h3>
+        <ul>
+            <li>Ministry of Communication & IT formed — January 1985</li>
+            <li>Dept. of Posts & Telecom separated — 1985</li>
+            <li>New Indian Post Office Act passed — 2023 (replacing 1898 Act)</li>
+            <li>Post Office Act 2023 enforced — 18 June 2024</li>
+        </ul>
+    </div>
+
+    <div class="similarity-group">
+        <h3>📦 Parcel & Logistics Services</h3>
+        <ul>
+            <li>Retail Post — August 2000</li>
+            <li>B2B Mail Services — 2003</li>
+            <li>Logistics Post — 11 August 2004</li>
+            <li>Direct Post — 2 June 2005</li>
+            <li>Parcel Network Optimization Project (PNOP) — 17 August 2018</li>
+        </ul>
+    </div>
+</div>
+
+<!-- QUIZ OVERLAY -->
+<div class="quiz-overlay" id="quizOverlay">
+    <div class="quiz-box">
+        <h2>🧠 India Post Quiz</h2>
+        <div class="quiz-score" id="quizScore">Score: 0 / 0</div>
+        <div class="quiz-question" id="quizQuestion"></div>
+        <div class="quiz-options" id="quizOptions"></div>
+        <div class="quiz-feedback" id="quizFeedback"></div>
+        <div class="quiz-nav">
+            <button class="btn btn-filter" id="nextBtn" onclick="nextQuestion()" style="display:none">Next →</button>
+            <button class="btn btn-download" onclick="closeQuiz()">✖ Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const events = [
+    { date: "1 Aug 1965",    sortDate: "1965-08-01", title: "Domestic Philatelic Deposit Account introduced", category: "postal" },
+    { date: "1 Jul 1968",    sortDate: "1968-07-01", title: "Public Provident Fund (PPF) introduced", category: "savings" },
+    { date: "15 Aug 1972",   sortDate: "1972-08-15", title: "PIN Code system introduced", category: "postal" },
+    { date: "1975",          sortDate: "1975-01-01", title: "Quick Mail Service (QMS) introduced", category: "postal" },
+    { date: "1 Apr 1982",    sortDate: "1982-04-01", title: "Post Office Savings Bank (POSB) General Rules came into force", category: "savings" },
+    { date: "Jan 1985",      sortDate: "1985-01-01", title: "Ministry of Communication & Information Technology formed", category: "admin" },
+    { date: "1985",          sortDate: "1985-06-01", title: "Department of Posts & Telecom separated", category: "admin" },
+    { date: "1 Aug 1986",    sortDate: "1986-08-01", title: "Speed Post Service launched", category: "speed" },
+    { date: "15 Aug 1987",   sortDate: "1987-08-15", title: "Monthly Income Scheme rules enforced", category: "savings" },
+    { date: "1 Apr 1988",    sortDate: "1988-04-01", title: "Kisan Vikas Patra (KVP) introduced", category: "savings" },
+    { date: "8 May 1989",    sortDate: "1989-05-08", title: "NSC (VIII Issue) came into force", category: "savings" },
+    { date: "24 Mar 1995",   sortDate: "1995-03-24", title: "Rural Postal Life Insurance (RPLI) started", category: "insurance" },
+    { date: "Aug 2000",      sortDate: "2000-08-01", title: "Retail Post introduced", category: "postal" },
+    { date: "6 Sep 2000",    sortDate: "2000-09-06", title: "Greeting Post introduced", category: "postal" },
+    { date: "5 Mar 2001",    sortDate: "2001-03-05", title: "Speed Post Passport Service launched", category: "speed" },
+    { date: "2001",          sortDate: "2001-06-01", title: "Electronic Fund Transfer (EFT) introduced", category: "digital" },
+    { date: "Jan 2002",      sortDate: "2002-01-01", title: "Track & Trace Service launched", category: "digital" },
+    { date: "2002",          sortDate: "2002-06-01", title: "Meghdoot Software launched", category: "digital" },
+    { date: "2003",          sortDate: "2003-01-01", title: "B2B Mail Services introduced", category: "postal" },
+    { date: "30 Jan 2004",   sortDate: "2004-01-30", title: "e-Post Service launched", category: "digital" },
+    { date: "2004",          sortDate: "2004-06-01", title: "150th Year of India Post celebrated", category: "milestone" },
+    { date: "11 Aug 2004",   sortDate: "2004-08-11", title: "Logistics Post introduced", category: "postal" },
+    { date: "2004",          sortDate: "2004-09-01", title: "Senior Citizen Savings Scheme (SCSS) introduced", category: "savings" },
+    { date: "2 Jun 2005",    sortDate: "2005-06-02", title: "Direct Post introduced", category: "postal" },
+    { date: "20 Jan 2006",   sortDate: "2006-01-20", title: "Instant Money Order (IMO) service started", category: "digital" },
+    { date: "25 Jun 2006",   sortDate: "2006-06-25", title: "e-Payment Service introduced", category: "digital" },
+    { date: "31 Aug 2006",   sortDate: "2006-08-31", title: "Speed Post 'One Rate' service launched", category: "speed" },
+    { date: "Nov 2012",      sortDate: "2012-11-01", title: "IT Modernization Project introduced", category: "digital" },
+    { date: "22 Mar 2013",   sortDate: "2013-03-22", title: "Electronic Indian Postal Order (e-IPO) introduced", category: "digital" },
+    { date: "2014",          sortDate: "2014-01-01", title: "DoP first ATM service launched", category: "banking" },
+    { date: "16 Jul 2016",   sortDate: "2016-07-16", title: "Gangajal distribution via post offices initiated", category: "postal" },
+    { date: "31 Dec 2016",   sortDate: "2016-12-31", title: "Branch Post Office (BoP) ATMs became interoperable with other banks", category: "banking" },
+    { date: "9 Oct 2017",    sortDate: "2017-10-09", title: "International Philatelic Deposit Account introduced", category: "postal" },
+    { date: "17 Aug 2018",   sortDate: "2018-08-17", title: "Parcel Network Optimization Project (PNOP) launched", category: "postal" },
+    { date: "1 Sep 2018",    sortDate: "2018-09-01", title: "India Post Payments Bank (IPPB) launched", category: "banking" },
+    { date: "14 Dec 2018",   sortDate: "2018-12-14", title: "Internet Banking introduced", category: "banking" },
+    { date: "15 Oct 2019",   sortDate: "2019-10-15", title: "Mobile Banking introduced", category: "banking" },
+    { date: "14 Jul 2020",   sortDate: "2020-07-14", title: "Instant Money Orders (IMO) discontinued", category: "discontinued" },
+    { date: "10 Aug 2022",   sortDate: "2022-08-10", title: "DoP ATM management handed over to IPPB", category: "banking" },
+    { date: "12 Oct 2022",   sortDate: "2022-10-12", title: "e-Passbook facility launched", category: "digital" },
+    { date: "2023",          sortDate: "2023-01-01", title: "New Indian Post Office Act passed (replacing 1898 Act)", category: "admin" },
+    { date: "31 Mar 2023",   sortDate: "2023-03-31", title: "Mobile Savings Certificates discontinued", category: "discontinued" },
+    { date: "1 Apr 2023",    sortDate: "2023-04-01", title: "Mahila Samman Savings Certificate introduced", category: "savings" },
+    { date: "31 Jan 2024",   sortDate: "2024-01-31", title: "Western Union Money Transfer service discontinued", category: "discontinued" },
+    { date: "18 Jun 2024",   sortDate: "2024-06-18", title: "Post Office Act 2023 enforced", category: "admin" },
+];
+
+// Sort events by date
+events.sort((a, b) => new Date(a.sortDate) - new Date(b.sortDate));
+
+let currentFilter = "all";
+let currentSearch = "";
+
+function getDecade(sortDate) {
+    const year = parseInt(sortDate.substring(0, 4));
+    if (year < 1970) return "1960s";
+    if (year < 1980) return "1970s";
+    if (year < 1990) return "1980s";
+    if (year < 2000) return "1990s";
+    if (year < 2010) return "2000s";
+    if (year < 2020) return "2010s";
+    return "2020s";
+}
+
+function getCategoryLabel(cat) {
+    const labels = {
+        savings: "💰 Savings",
+        postal: "📮 Postal",
+        speed: "⚡ Speed Post",
+        digital: "💻 Digital",
+        banking: "🏦 Banking",
+        insurance: "🛡 Insurance",
+        admin: "🏛 Admin",
+        discontinued: "🚫 Discontinued",
+        milestone: "🏆 Milestone"
+    };
+    return labels[cat] || cat;
+}
+
+function renderTimeline() {
+    const container = document.getElementById("timeline");
+    container.innerHTML = "";
+
+    let filtered = events.filter(e => {
+        const matchCat = currentFilter === "all" || e.category === currentFilter;
+        const matchSearch = currentSearch === "" ||
+            e.title.toLowerCase().includes(currentSearch.toLowerCase()) ||
+            e.date.toLowerCase().includes(currentSearch.toLowerCase()) ||
+            e.category.toLowerCase().includes(currentSearch.toLowerCase());
+        return matchCat && matchSearch;
+    });
+
+    document.getElementById("visibleCount").textContent = filtered.length;
+    document.getElementById("totalCount").textContent = events.length;
+
+    let lastDecade = "";
+    filtered.forEach((ev, idx) => {
+        const decade = getDecade(ev.sortDate);
+        if (decade !== lastDecade) {
+            lastDecade = decade;
+            const dl = document.createElement("div");
+            dl.className = "decade-label";
+            dl.innerHTML = `<span>${decade}</span>`;
+            container.appendChild(dl);
+        }
+
+        const item = document.createElement("div");
+        item.className = `timeline-item cat-${ev.category}`;
+        item.innerHTML = `
+            <div class="timeline-dot"></div>
+            <div class="card">
+                <div class="card-category">${getCategoryLabel(ev.category)}</div>
+                <div class="card-date">${ev.date}</div>
+                <div class="card-title">${ev.title}</div>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<p style="text-align:center;color:#888;padding:40px;">No events found.</p>`;
+    }
+}
+
+document.querySelectorAll(".btn-filter").forEach(btn => {
+    btn.addEventListener("click", function() {
+        if (!this.dataset.filter) return;
+        document.querySelectorAll(".btn-filter").forEach(b => b.classList.remove("active"));
+        this.classList.add("active");
+        currentFilter = this.dataset.filter;
+        renderTimeline();
+    });
+});
+
+function filterSearch() {
+    currentSearch = document.getElementById("searchInput").value;
+    renderTimeline();
+}
+
+// ========== QUIZ ==========
+let quizQuestions = [];
+let quizIndex = 0;
+let quizScore = 0;
+let answered = false;
+
+function generateQuestions() {
+    const q = [];
+    events.forEach(ev => {
+        // Q: What date was [title]?
+        const otherDates = events.filter(e => e !== ev).map(e => e.date);
+        const wrongs = shuffle(otherDates).slice(0, 3);
+        q.push({
+            question: `When was "${ev.title}" introduced/launched?`,
+            answer: ev.date,
+            options: shuffle([ev.date, ...wrongs])
+        });
+        // Q: What happened on [date]?
+        const otherTitles = events.filter(e => e !== ev).map(e => e.title);
+        const wrongTitles = shuffle(otherTitles).slice(0, 3);
+        q.push({
+            question: `What event occurred on ${ev.date}?`,
+            answer: ev.title,
+            options: shuffle([ev.title, ...wrongTitles])
+        });
+    });
+    return shuffle(q).slice(0, 20);
+}
+
+function shuffle(arr) {
+    return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function startQuiz() {
+    quizQuestions = generateQuestions();
+    quizIndex = 0;
+    quizScore = 0;
+    answered = false;
+    document.getElementById("quizOverlay").classList.add("active");
+    showQuestion();
+}
+
+function showQuestion() {
+    const q = quizQuestions[quizIndex];
+    document.getElementById("quizQuestion").textContent = q.question;
+    document.getElementById("quizFeedback").textContent = "";
+    document.getElementById("quizScore").textContent = `Score: ${quizScore} / ${quizIndex} | Q ${quizIndex + 1} of ${quizQuestions.length}`;
+    document.getElementById("nextBtn").style.display = "none";
+    answered = false;
+
+    const optContainer = document.getElementById("quizOptions");
+    optContainer.innerHTML = "";
+    q.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "quiz-option";
+        btn.textContent = opt;
+        btn.onclick = () => selectAnswer(btn, opt, q.answer);
+        optContainer.appendChild(btn);
+    });
+}
+
+function selectAnswer(btn, selected, correct) {
+    if (answered) return;
+    answered = true;
+    const opts = document.querySelectorAll(".quiz-option");
+    opts.forEach(o => {
+        if (o.textContent === correct) o.classList.add("correct");
+        else if (o === btn && selected !== correct) o.classList.add("wrong");
+        o.style.cursor = "default";
+    });
+    const fb = document.getElementById("quizFeedback");
+    if (selected === correct) {
+        quizScore++;
+        fb.textContent = "✅ Correct!";
+        fb.style.color = "#27ae60";
+    } else {
+        fb.textContent = `❌ Wrong! Answer: ${correct}`;
+        fb.style.color = "#e74c3c";
+    }
+    document.getElementById("nextBtn").style.display = "inline-block";
+    document.getElementById("quizScore").textContent = `Score: ${quizScore} / ${quizIndex + 1}`;
+}
+
+function nextQuestion() {
+    quizIndex++;
+    if (quizIndex >= quizQuestions.length) {
+        document.getElementById("quizQuestion").textContent = `🎉 Quiz Complete! Final Score: ${quizScore} / ${quizQuestions.length}`;
+        document.getElementById("quizOptions").innerHTML = "";
+        document.getElementById("quizFeedback").textContent = "";
+        document.getElementById("nextBtn").style.display = "none";
+        document.getElementById("quizScore").textContent = `Score: ${quizScore} / ${quizQuestions.length}`;
+    } else {
+        showQuestion();
+    }
+}
+
+function closeQuiz() {
+    document.getElementById("quizOverlay").classList.remove("active");
+}
+
+// ========== PDF ==========
+function downloadPDF() {
+    window.print();
+}
+
+// Initial render
+renderTimeline();
+</script>
+</body>
+</html>
